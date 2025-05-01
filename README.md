@@ -1,1 +1,2 @@
-# personaltrainer
+# Front End programming
+# lopputyö - personaltrainer
