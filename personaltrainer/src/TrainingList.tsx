@@ -78,7 +78,28 @@ function TrainingList() {
         {
             headerName: "Customer link",
             cellRenderer: (params: ICellRendererParams<TTrainingsData>) =>
-                params.data._links.customer?.href ?? "No link"
+                params.data?._links.customer?.href ?? "No link"
+        },
+        {
+
+            cellRenderer: (params: ICellRendererParams<TTrainingsCustomerCustom>) => {
+                if (!params.data) {
+                    return null; 
+                }  else {
+                    const useHref=params.data._links.self.href;
+                    return (
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            onClick={() => handleDelete(useHref)}
+                        >
+                            Delete
+                        </Button>
+                    );
+                }    
+         
+            }
         }
     ]);
 
@@ -89,8 +110,12 @@ function TrainingList() {
         { field: "activity", headerName: "Activity" },
         {
             headerName: "Customer Name",
-            valueGetter: (params) =>
-                `${params.data.customer?.firstname ?? ""} ${params.data.customer?.lastname ?? ""}`,
+            valueGetter: params => {
+                const c = params.data?.customer;
+                return c
+                    ? `${c.firstname} ${c.lastname}`
+                    : "Unknown customer";
+            },
         },
 
     ]);
@@ -101,37 +126,46 @@ function TrainingList() {
         { field: "activity", headerName: "Activity" },
         {
             headerName: "Customer",
-            valueGetter: (params) =>
-                `${params.data.customer.firstname ?? ""} ${params.data.customer.lastname ?? ""}`,
+            valueGetter: params => {
+                const c = params.data?.customer;
+                return c
+                    ? `${c.firstname} ${c.lastname}`
+                    : "Unknown customer";
+            },
 
         },
         {
-            cellRenderer: (params: ICellRendererParams<TTrainingsCustomerCustom>) =>
-                <AddTraining
-                    addTraining={addTraining}
-                    initialId={params.data.id}
-                />
-        },
-        {
 
-            cellRenderer: (params: ICellRendererParams<TTrainingsCustomerCustom>) => (
-                <Button
-                    variant="outlined"
-                    color="error"
-                    size="small"
-                    onClick={() => handleDelete(params.data._links.self.href)}
-                >
-                    Delete
-                </Button>
-            )
+            cellRenderer: (params: ICellRendererParams<TTrainingsCustomerCustom>) => {
+                if (!params.data) {
+                    return null; 
+                }  else {
+                    const useHref=params.data._links.self.href;
+                    return (
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            onClick={() => handleDelete(useHref)}
+                        >
+                            Delete
+                        </Button>
+                    );
+                }    
+         
+            }
         }
     ]);
 
     const addTraining = (treeni: TTrainingsData) => {
         const uusiDate = new Date(treeni.date);
         let iso = uusiDate.toISOString();
-        iso = iso.replace("Z","+000");
-        console.log("ISOISOSISO: "+iso);
+   //     iso = iso.replace("Z", "+000");
+        console.log("ISOISOSISO: " + iso);
+        let uusiHref = treeni._links.customer.href;
+        uusiHref = uusiHref.replace("https://customer-rest-service-frontend-personaltrainer.2.rahtiapp.fi/",
+            "https://myserver.personaltrainer.api/"
+        );
         const options = {
             method: "POST",
             headers: {
@@ -141,17 +175,17 @@ function TrainingList() {
                 date: iso,
                 activity: treeni.activity,
                 duration: treeni.duration,
-                customer: treeni._links.customer.href,
+                customer: uusiHref 
             }),
         };
         console.log("TÄMÄ YRITETTIIN POSTATA",
             JSON.stringify({
-            date: iso,
-            activity: treeni.activity,
-            duration: treeni.duration,
-            customer: treeni._links.customer.href,
-        }));
-        fetch('${BASE_URL}/trainings', options)
+                date: iso,
+                activity: treeni.activity,
+                duration: treeni.duration,
+                customer: uusiHref,
+            }));
+        fetch(`${BASE_URL}/trainings`, options)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error("Treeniä ei voitu lisätä")
@@ -161,6 +195,7 @@ function TrainingList() {
             .then(() => fetchCombinedTrainings())
             .catch(error => console.error("Virhe treenin lisäyksessä:", error));
     }
+
 
     const handleDelete = (href: string) => {
         if (window.confirm("Haluatko poistaa treenin?")) {
@@ -242,6 +277,8 @@ function TrainingList() {
         }
     };
 
+
+
     useEffect(fetchTrainings, []);
     useEffect(fetchTrainingsWitCustomers, []);
     useEffect(() => {
@@ -253,17 +290,20 @@ function TrainingList() {
 
     return (
         <>
-            <div>Lisää treeni tähän
+            <div style={{ height: 800 }}>
+            <AddTraining addTraining={addTraining} />
+       
                 <input
                     type="text"
-                    placeholder="Hae treeneistä"
+                    placeholder="Search from trainings"
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                     style={{ marginBottom: 10, padding: 5, width: "20%" }}
                 />
             </div>
-
-            <div style={{ height: 800 }}>
+           <div>Hae</div>
+            <div style={{ height: 800 }} >
+             
                 <AgGridReact<TTrainingsCustomerCustom>
                     rowData={trainingsWithLinks.length > 0 ? trainingsWithLinks : undefined}
                     columnDefs={columnDefs3}
