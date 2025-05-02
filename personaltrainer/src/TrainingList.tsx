@@ -52,6 +52,7 @@ export type TTrainingsCustomer = {
 
 }
 
+
 type TTrainingsCustomerCustom = TTrainingsCustomer & {
     _links: TTrainingsData["_links"]
 }
@@ -62,6 +63,7 @@ function TrainingList() {
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
     const [filter, setFilter] = useState("");
 
+
     const formatDate = (isoDate: string) => {
         const date = new Date(isoDate);
         return new Intl.DateTimeFormat("fi-FI", {
@@ -70,55 +72,6 @@ function TrainingList() {
         }).format(date);
     };
 
-    const [columnDefs] = useState<ColDef<TTrainingsData>[]>([
-        { field: "id" },
-        { field: "date", valueFormatter: (params) => formatDate(params.value), },
-        { field: "duration" },
-        { field: "activity" },
-        {
-            headerName: "Customer link",
-            cellRenderer: (params: ICellRendererParams<TTrainingsData>) =>
-                params.data?._links.customer?.href ?? "No link"
-        },
-        {
-
-            cellRenderer: (params: ICellRendererParams<TTrainingsCustomerCustom>) => {
-                if (!params.data) {
-                    return null; 
-                }  else {
-                    const useHref=params.data._links.self.href;
-                    return (
-                        <Button
-                            variant="outlined"
-                            color="error"
-                            size="small"
-                            onClick={() => handleDelete(useHref)}
-                        >
-                            Delete
-                        </Button>
-                    );
-                }    
-         
-            }
-        }
-    ]);
-
-    const [columnDefs2] = useState<ColDef<TTrainingsCustomer>[]>([
-        { field: "id" },
-        { field: "date", headerName: "Date", valueFormatter: (params) => formatDate(params.value), },
-        { field: "duration", headerName: "Duration (mins)" },
-        { field: "activity", headerName: "Activity" },
-        {
-            headerName: "Customer Name",
-            valueGetter: params => {
-                const c = params.data?.customer;
-                return c
-                    ? `${c.firstname} ${c.lastname}`
-                    : "Unknown customer";
-            },
-        },
-
-    ]);
 
     const [columnDefs3] = useState<ColDef<TTrainingsCustomerCustom>[]>([
         { field: "date", headerName: "Date", valueFormatter: (params) => formatDate(params.value) },
@@ -135,12 +88,11 @@ function TrainingList() {
 
         },
         {
-
             cellRenderer: (params: ICellRendererParams<TTrainingsCustomerCustom>) => {
                 if (!params.data) {
-                    return null; 
-                }  else {
-                    const useHref=params.data._links.self.href;
+                    return null;
+                } else {
+                    const useHref = params.data._links.self.href;
                     return (
                         <Button
                             variant="outlined"
@@ -151,8 +103,8 @@ function TrainingList() {
                             Delete
                         </Button>
                     );
-                }    
-         
+                }
+
             }
         }
     ]);
@@ -160,7 +112,7 @@ function TrainingList() {
     const addTraining = (treeni: TTrainingsData) => {
         const uusiDate = new Date(treeni.date);
         let iso = uusiDate.toISOString();
-   //     iso = iso.replace("Z", "+000");
+        //     iso = iso.replace("Z", "+000");
         console.log("ISOISOSISO: " + iso);
         let uusiHref = treeni._links.customer.href;
         uusiHref = uusiHref.replace("https://customer-rest-service-frontend-personaltrainer.2.rahtiapp.fi/",
@@ -175,10 +127,10 @@ function TrainingList() {
                 date: iso,
                 activity: treeni.activity,
                 duration: treeni.duration,
-                customer: uusiHref 
+                customer: uusiHref
             }),
         };
-        console.log("TÄMÄ YRITETTIIN POSTATA",
+        console.log("TÄMÄ YRITETÄÄN POSTATA",
             JSON.stringify({
                 date: iso,
                 activity: treeni.activity,
@@ -277,22 +229,16 @@ function TrainingList() {
         }
     };
 
-
-
-    useEffect(fetchTrainings, []);
-    useEffect(fetchTrainingsWitCustomers, []);
     useEffect(() => {
+        fetchTrainings(),
+        fetchTrainingsWitCustomers(),
         fetchCombinedTrainings();
     }, []);
 
-
-
-
     return (
         <>
-            <div style={{ height: 800 }}>
-            <AddTraining addTraining={addTraining} />
-       
+            <div >
+                <AddTraining addTraining={addTraining} />
                 <input
                     type="text"
                     placeholder="Search from trainings"
@@ -301,15 +247,16 @@ function TrainingList() {
                     style={{ marginBottom: 10, padding: 5, width: "20%" }}
                 />
             </div>
-           <div>Hae</div>
+            <div>Hae</div>
             <div style={{ height: 800 }} >
-             
                 <AgGridReact<TTrainingsCustomerCustom>
                     rowData={trainingsWithLinks.length > 0 ? trainingsWithLinks : undefined}
                     columnDefs={columnDefs3}
                     quickFilterText={filter}
                 />
             </div>
+
+
         </>
 
     )

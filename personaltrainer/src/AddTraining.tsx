@@ -5,9 +5,7 @@ import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import { createTrainingData } from "./utils/trainingFactory";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
@@ -60,7 +58,8 @@ export default function AddTraining({ addTraining }: TAddTrainingsDataProps) {
         fetch(`${BASE_URL}/customers`)
             .then((response) => {
                 if (!response.ok) {
-                    throw new Error("asiakkaider haku epäonnistui")
+                    window.alert("Could not fetch customers");
+                    throw new Error("asiakkaider haku epäonnistui");
                 }
                 return response.json();
             })
@@ -71,6 +70,7 @@ export default function AddTraining({ addTraining }: TAddTrainingsDataProps) {
         }
     }
     const handleClickOpen = () => {
+        fetchCustomers();
         setOpen(true);
     };
 
@@ -92,7 +92,6 @@ export default function AddTraining({ addTraining }: TAddTrainingsDataProps) {
       };
     
 
-    useEffect(() => {fetchCustomers();}, []);
 
     return (
         <>
@@ -116,7 +115,7 @@ export default function AddTraining({ addTraining }: TAddTrainingsDataProps) {
                         margin="dense"
                         id="date"
                         name="date"
-                        label="Date and Time"
+                        placeholder="Enter date and time" 
                         type="datetime-local"
                         fullWidth
                         variant="standard"
