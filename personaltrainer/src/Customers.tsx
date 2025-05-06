@@ -4,6 +4,7 @@ import { AllCommunityModule, ICellRendererParams, ModuleRegistry } from 'ag-grid
 import { ColDef } from "ag-grid-community";
 import AddCustomer from "./AddCustomer";
 import { Button } from "@mui/material";
+import EditCustomer from "./EditCustomer"
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -29,40 +30,52 @@ export type TCustomer = {
 function Customers() {
     const [customers, setCustomers] = useState<TCustomer[]>([]);
     const [filter, setFilter] = useState("");
+    const [customer, setCustomer] = useState<TCustomer[]>([]);
+    const [editCustomerData, setEditCustomerData] = useState<TCustomer | null>(null);
+    const [editModalOpen, setEditModalOpen] = useState(false);
 
     const [columnDefs] = useState<ColDef<TCustomer>[]>([
         { field: "firstname" },
         { field: "lastname" },
         { field: "email" },
         { field: "phone" },
-        { field: "_links.customer.href" },
         {
-                    cellRenderer: (params: ICellRendererParams<TCustomer>) => {
-                        if (!params.data) {
-                            return null;
-                        } else {
-                            const useHref = params.data._links.self.href;
-                            return (
-                                <Button
-                                    variant="outlined"
-                                    color="error"
-                                    size="small"
-                                    onClick={() => handleDelete(useHref)}
-                                >
-                                    Delete
-                                </Button>
-                            );
-                        }
+            headerName: "Toiminnot",
+            cellRenderer: (params: ICellRendererParams<TCustomer>) => {
+                if (!params.data) return null;
         
-                    }
-                }
+                const useHref = params.data._links.self.href;
+                const { firstname, lastname, email, city, phone, postcode, streetaddress } = params.data;
+        
+                return (
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                        <Button
+                            variant="outlined"
+                            color="success"
+                            size="small"
+                            onClick={() => handleEdit(useHref, firstname, lastname, email, city, phone, postcode, streetaddress)}
+                        >
+                            Edit
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            onClick={() => handleDelete(useHref)}
+                        >
+                            Delete
+                        </Button>
+                    </div>
+                );
+            }
+        }
     ]);
 
     const handleDelete = (href: string) => {
         if (window.confirm("Do you want to remove customer")) {
             fetch(href, { method: "DELETE" })
                 .then(response => {
-                    if (!response.ok){
+                    if (!response.ok) {
                         window.alert("Delete failed");
                         throw new Error("Poisto epäonnistui");
                     }
@@ -70,6 +83,34 @@ function Customers() {
                 })
                 .catch(error => console.error(error));
         }
+    };
+
+
+    const openEditCustomerModal = (customer: TCustomer) => {
+        setEditCustomerData(customer);
+    };
+
+    const handleEdit = (href: string, fname: string, sname: string, email: string,
+        city: string, phone: string, postcod: string, street: string) => {
+        const customerData: TCustomer = {
+            firstname: fname,
+            lastname: sname,
+            email: email,
+            city: city,
+            phone: phone,
+            postcode: postcod,
+            streetaddress: street,
+            _links: {
+                self: { href: href },
+                training: { href: "" },
+                customer: { href: "" },
+            },
+        };
+
+        console.log("ASIAKAAN TIEDOT:", fname, sname, street, postcod, city, email, phone, href);
+        setEditCustomerData(customerData);
+        setEditModalOpen(true);
+
     };
 
     const fetchCustomers = () => {
@@ -88,11 +129,11 @@ function Customers() {
     }
 
     const addCustomer = (asiakas: TCustomer) => {
-        console.log("UUDEN ASIAKKAAN TIEDOT",asiakas);
+        console.log("UUDEN ASIAKKAAN TIEDOT", asiakas);
         const options = {
             method: "POST",
             headers: {
-                'Content-Type' : 'application/json', 
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 firstname: asiakas.firstname,
@@ -114,17 +155,35 @@ function Customers() {
                 postcode: asiakas.postcode,
                 city: asiakas.city,
             }));
-            fetch(`${BASE_URL}/customers`, options)
-            .then(( response) => {
+        fetch(`${BASE_URL}/customers`, options)
+            .then((response) => {
                 if (!response.ok) {
                     window.alert("Customer could not be added");
                     throw new Error("Asiakasta ei voitu lisätä");
                 } return response.json();
             })
             .then(() => fetchCustomers())
-            .catch(error => console.error("Virhe asiakkaan lisäyksessä:",error));
+            .catch(error => console.error("Virhe asiakkaan lisäyksessä:", error));
 
     }
+
+    const editCustomer = (updatedCustomer: TCustomer) => {
+        fetch(updatedCustomer._links.self.href, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedCustomer),
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Asiakkaan tietojen päivitys epäonnistui");
+                }
+                return response.json();
+            })
+            .then(() => fetchCustomers())
+            .catch((error) => console.error("Virhe asiakkaan tietoja päivitettäessä: ", error));
+
+    }
+
 
     useEffect(fetchCustomers, []);
 
@@ -139,6 +198,7 @@ function Customers() {
                     onChange={(e) => setFilter(e.target.value)}
                     style={{ marginBottom: 10, padding: 5, width: "20%" }}
                 />
+                <AddCustomer addCustomer={addCustomer} />
             </div>
 
             <div style={{ height: 800 }}>
@@ -148,7 +208,15 @@ function Customers() {
                     quickFilterText={filter}
                 />
             </div>
-        </>
+            {editCustomerData && (
+                <EditCustomer
+                    editCustomer={editCustomer}
+                    customer={editCustomerData}
+                    open={editModalOpen}
+                    handleClose={() => setEditModalOpen(false)}
+                />
+            )}
+      </>
     )
 }
 
