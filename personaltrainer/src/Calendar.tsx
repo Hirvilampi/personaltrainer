@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
-import { ColDef } from "ag-grid-community";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import weekGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -55,17 +54,8 @@ function Calendar() {
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
     const [events, setEvents] = useState<any>([]);
     const [forceRenderKey, setForceRenderKey] = useState(0); // Tila uudelleenrenderöinnin pakottamiseen
-    const formatDate = (isoDate: string) => {
-        const date = new Date(isoDate);
-        return new Intl.DateTimeFormat("fi-FI", {
-            dateStyle: "short",
-            timeStyle: "short",
-            hour12: false,
-        }).format(date);
-    };
 
-
-
+    // haetaan treenajä ja asiakkkaita koskeva data ja yhdistetään ne
     const fetchCombinedTrainings = async () => {
         try {
             const [trainingsCustomersRes, trainingsLinksRes] = await Promise.all([
@@ -134,7 +124,7 @@ function Calendar() {
         <>
      <div style={{margin: "20px"}}>
      <button onClick={handleReload} style={{ padding: "10px", margin: "10px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
-            Päivitä sivu
+            Update calendar
         </button>
      </div>
 
@@ -149,7 +139,7 @@ function Calendar() {
                     right: 'dayGridMonth,timeGridWeek,timeGridDay',
                   }}
                 initialView="timeGridWeek"
-                events={calendarEvents}
+                events={events}
                 firstDay={1}
                 slotMinTime="07:00:00"
                 locale="fi"

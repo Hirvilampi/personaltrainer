@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
-import { ColDef } from "ag-grid-community";
-
-import { BarChart, Bar, YAxis, XAxis, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, YAxis, XAxis } from 'recharts';
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -51,39 +49,8 @@ export type TTrainingsCustomer = {
 
 }
 
-
-
-type TTrainingsCustomerCustom = TTrainingsCustomer & {
-    _links: TTrainingsData["_links"]
-}
-
 function Chart() {
     const [treenit, setTreenit] = useState<TTrainings[]>([]);
-
-    const formatDate = (isoDate: string) => {
-        const date = new Date(isoDate);
-        return new Intl.DateTimeFormat("fi-FI", {
-            dateStyle: "short",
-            timeStyle: "short",
-            hour12: false,
-        }).format(date);
-    };
-
-    const [columnDefs3] = useState<ColDef<TTrainingsCustomerCustom>[]>([
-        { field: "date", headerName: "Date", valueFormatter: (params) => formatDate(params.value) },
-        { field: "duration", headerName: "Duration (mins)" },
-        { field: "activity", headerName: "Activity" },
-        {
-            headerName: "Customer",
-            valueGetter: params => {
-                const c = params.data?.customer;
-                return c
-                    ? `${c.firstname} ${c.lastname}`
-                    : "Unknown customer";
-            },
-        }
-    ]);
-
 
     const fetchTrainings = () => {
         fetch(`${BASE_URL}/trainings`)
@@ -99,8 +66,6 @@ function Chart() {
             console.log('jotain haettiin', treenit);
         }
     }
-
-
 
     const calculateTrainingActivities = (treenit: TTrainings[]) => {
         const activityAndDurations = new Map<string, number>();
@@ -155,7 +120,7 @@ function Chart() {
 
 <div style={{margin: "20px"}}>
      <button onClick={handleReload} style={{ padding: "10px", margin: "10px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
-            Päivitä sivu
+            Update chart
         </button>
      </div>
 

@@ -17,9 +17,9 @@ export default function AddTrainingDialog({
   initialCustomerLink: string;
 }) {
   // lomakkeen state...
-  const [date, setDate] = useState("");
-  const [duration, setDuration] = useState("");
-  const [activity, setActivity] = useState("");
+  const [date] = useState("");
+  const [duration] = useState("");
+  const [activity] = useState("");
 
   const handleSubmit = () => {
     const t = createTrainingData(
