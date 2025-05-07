@@ -59,9 +59,6 @@ type TTrainingsCustomerCustom = TTrainingsCustomer & {
 
 function Chart() {
     const [treenit, setTreenit] = useState<TTrainings[]>([]);
-    const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
-    const [filter, setFilter] = useState("");
-
 
     const formatDate = (isoDate: string) => {
         const date = new Date(isoDate);
@@ -149,8 +146,18 @@ function Chart() {
         fetchTrainings();
     }, []);
 
+    const handleReload = () => {
+        fetchTrainings(); // Lataa sivu uudelleen
+    };
+
     return (
         <>
+
+<div style={{margin: "20px"}}>
+     <button onClick={handleReload} style={{ padding: "10px", margin: "10px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+            Päivitä sivu
+        </button>
+     </div>
 
             <div style={{ margin: "35px"}}>
 

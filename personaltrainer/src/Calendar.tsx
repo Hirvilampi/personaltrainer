@@ -53,11 +53,14 @@ type TTrainingsCustomerCustom = TTrainingsCustomer & {
 
 function Calendar() {
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
+    const [events, setEvents] = useState<any>([]);
+    const [forceRenderKey, setForceRenderKey] = useState(0); // Tila uudelleenrenderöinnin pakottamiseen
     const formatDate = (isoDate: string) => {
         const date = new Date(isoDate);
         return new Intl.DateTimeFormat("fi-FI", {
             dateStyle: "short",
-            timeStyle: "short"
+            timeStyle: "short",
+            hour12: false,
         }).format(date);
     };
 
@@ -123,8 +126,8 @@ function Calendar() {
 
     const handleReload = () => {
         fetchCombinedTrainings(); // Lataa sivu uudelleen
-        console.log("Ladataan tietoja");
-        console.log("Calendar events", calendarEvents);
+        setEvents(calendarEvents);
+        setForceRenderKey((prevKey) => prevKey + 1);
     };
 
     return (
@@ -138,6 +141,7 @@ function Calendar() {
        <div style={{margin:"35px"}}>
 
             <FullCalendar
+                key={forceRenderKey}
                 plugins={[dayGridPlugin, weekGridPlugin, timeGridPlugin]}
                 headerToolbar={{
                     left: 'prev,next today',
@@ -147,6 +151,8 @@ function Calendar() {
                 initialView="timeGridWeek"
                 events={calendarEvents}
                 firstDay={1}
+                slotMinTime="07:00:00"
+                locale="fi"
             />
 
 

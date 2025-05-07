@@ -70,6 +70,7 @@ function TrainingList() {
         return new Intl.DateTimeFormat("fi-FI", {
             dateStyle: "short",
             timeStyle: "short",
+            hour12: false,
         }).format(date);
     };
 
