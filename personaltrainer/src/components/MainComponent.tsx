@@ -8,6 +8,7 @@ import Chart from "../Chart";
 
 export default function MainComponent() {
   const [activeTab, setActiveTab] = useState(1);
+  const [activePage, setActivePage] = useState("TrainingList");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const switchTab = (e: any) => {

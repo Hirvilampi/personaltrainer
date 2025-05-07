@@ -4,6 +4,7 @@ import { AllCommunityModule, ICellRendererParams, ModuleRegistry } from 'ag-grid
 import { ColDef } from "ag-grid-community";
 import { Button } from "@mui/material";
 import AddTraining from "./AddTraining";
+import { useLocation } from "react-router-dom";
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -62,7 +63,7 @@ function TrainingList() {
     const [trainingsWithCustomers, setTrainingsWithCustomers] = useState<TTrainingsCustomer[]>([]);
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
     const [filter, setFilter] = useState("");
-
+    const location = useLocation();
 
     const formatDate = (isoDate: string) => {
         const date = new Date(isoDate);
@@ -231,10 +232,11 @@ function TrainingList() {
     };
 
     useEffect(() => {
+        console.log("Route changed to:", location.pathname);
         fetchTrainings(),
         fetchTrainingsWitCustomers(),
         fetchCombinedTrainings();
-    }, []);
+    }, [location.pathname]);
 
     return (
         <>
@@ -249,7 +251,7 @@ function TrainingList() {
                     style={{ marginLeft: '10px', padding: '5px', width: "20%" }}
                 />
             </div>
-            
+
             <div style={{ height: 800 }} >
                 <AgGridReact<TTrainingsCustomerCustom>
                     rowData={trainingsWithLinks.length > 0 ? trainingsWithLinks : undefined}
