@@ -121,7 +121,7 @@ export default function AddTraining({ addTraining }: TAddTrainingsDataProps) {
                         margin="dense"
                         id="duration"
                         name="duration"
-                        label="Duration"
+                        label="Duration (mins)"
                         type="text"
                         fullWidth
                         variant="standard"

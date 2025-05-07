@@ -50,9 +50,7 @@ export type TTrainingsCustomer = {
         email: string,
         phone: string
     }
-
 }
-
 
 type TTrainingsCustomerCustom = TTrainingsCustomer & {
     _links: TTrainingsData["_links"]
@@ -77,10 +75,11 @@ function TrainingList() {
 
     const [columnDefs3] = useState<ColDef<TTrainingsCustomerCustom>[]>([
         { field: "date", headerName: "Date", valueFormatter: (params) => formatDate(params.value) },
-        { field: "duration", headerName: "Duration (mins)" },
-        { field: "activity", headerName: "Activity" },
+        { field: "duration", headerName: "Duration (mins)", width: 160 },
+        { field: "activity", headerName: "Activity", width: 180 },
         {
             headerName: "Customer",
+            width: 180,
             valueGetter: params => {
                 const c = params.data?.customer;
                 return c
@@ -89,7 +88,7 @@ function TrainingList() {
             },
 
         },
-        {
+        {   headerName: "Actions",width: 150,
             cellRenderer: (params: ICellRendererParams<TTrainingsCustomerCustom>) => {
                 if (!params.data) {
                     return null;
