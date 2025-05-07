@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-import { AgGridReact } from "ag-grid-react";
-import { AllCommunityModule, ICellRendererParams, ModuleRegistry } from 'ag-grid-community';
-import { ColDef } from "ag-grid-community";
-import { Button } from "@mui/material";
-import AddTraining from "./AddTraining";
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import dayGridPlugin from "@fullcalendar/daygrid";
 import weekGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -32,12 +28,6 @@ export type TTrainingsData = {
     }
 }
 
-export type TTrainings = {
-    date: string;
-    duration: string;
-    activity: string;
-}
-
 export type TTrainingsCustomer = {
     id: number,
     date: string;
@@ -62,33 +52,10 @@ type TTrainingsCustomerCustom = TTrainingsCustomer & {
 
 function Calendar() {
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
-    const [filter, setFilter] = useState("");
+    const [events, setEvents] = useState<any>([]);
+    const [forceRenderKey, setForceRenderKey] = useState(0); // Tila uudelleenrenderöinnin pakottamiseen
 
-    const formatDate = (isoDate: string) => {
-        const date = new Date(isoDate);
-        return new Intl.DateTimeFormat("fi-FI", {
-            dateStyle: "short",
-            timeStyle: "short",
-            hour12: false,
-        }).format(date);
-    };
-
-    const [columnDefs3] = useState<ColDef<TTrainingsCustomerCustom>[]>([
-        { field: "date", headerName: "Date", valueFormatter: (params) => formatDate(params.value) },
-        { field: "duration", headerName: "Duration (mins)" },
-        { field: "activity", headerName: "Activity" },
-        {
-            headerName: "Customer",
-            valueGetter: params => {
-                const c = params.data?.customer;
-                return c
-                    ? `${c.firstname} ${c.lastname}`
-                    : "Unknown customer";
-            },
-        }
-    ]);
-
-
+    // haetaan treenajä ja asiakkkaita koskeva data ja yhdistetään ne
     const fetchCombinedTrainings = async () => {
         try {
             const [trainingsCustomersRes, trainingsLinksRes] = await Promise.all([
@@ -142,47 +109,44 @@ function Calendar() {
         };
     });
 
-
     useEffect(() => {
-            fetchCombinedTrainings();
-    }, []);
+        fetchCombinedTrainings();
+        setEvents(calendarEvents);
+        setForceRenderKey((prevKey) => prevKey + 1);
+    }, []); // Lataa tiedot aina, kun sijainti muuttuu.
+
+    const handleReload = () => {
+        fetchCombinedTrainings(); // Lataa sivu uudelleen
+        setEvents(calendarEvents);
+        setForceRenderKey((prevKey) => prevKey + 1);
+    };
 
     return (
         <>
-     
-       <div style={{margin:"15px"}}>
- {/* 
-                <input
-                    type="text"
-                    placeholder="Search from trainings"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    style={{ marginBottom: 10, padding: 5, width: "20%" }}
-                />
-*/}
-   
+     <div style={{margin: "20px"}}>
+     <button onClick={handleReload} style={{ padding: "10px", margin: "10px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+            Update calendar
+        </button>
+     </div>
+
+       <div style={{margin:"35px"}}>
 
             <FullCalendar
+                key={forceRenderKey}
                 plugins={[dayGridPlugin, weekGridPlugin, timeGridPlugin]}
                 headerToolbar={{
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay',
                   }}
-                initialView="dayGridMonth"
-                events={calendarEvents}
+                initialView="timeGridWeek"
+                events={events}
                 firstDay={1}
+                slotMinTime="07:00:00"
+                locale="fi"
             />
 
-{/* 
-            <div style={{ height: 800 }} >
-                <AgGridReact<TTrainingsCustomerCustom>
-                    rowData={trainingsWithLinks.length > 0 ? trainingsWithLinks : undefined}
-                    columnDefs={columnDefs3}
-                    quickFilterText={filter}
-                />
-            </div>
-*/}
+
          </div>
         </>
 

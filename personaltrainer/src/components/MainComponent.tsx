@@ -2,8 +2,7 @@ import { useState } from "react";
 import TrainingList from "../TrainingList";
 import Customers from "../Customers";
 import Calendar from "../Calendar";
-
-
+import Chart from "../Chart";
 
 export default function MainComponent() {
   const [activeTab, setActiveTab] = useState(1);
@@ -28,6 +27,9 @@ export default function MainComponent() {
           <li className="nav-item">
             <a id="3" className={"nav-link " + (activeTab === 3 ? "active" : "")} onClick={e => switchTab(e)}>Calendar</a>
           </li>
+          <li className="nav-item">
+            <a id="4" className={"nav-link " + (activeTab === 4 ? "active" : "")} onClick={e => switchTab(e)}>Chart</a>
+          </li>
         </ul>
 
         {/***** Tab 1 - Treenit *****/}
@@ -46,6 +48,10 @@ export default function MainComponent() {
           <Calendar />
         </div>
 
+           {/***** Tab 4- chart *****/}
+           <div className={"container " + (activeTab === 4 ? "" : "display-none")}>
+          <Chart />
+        </div>
 
       </div>
     </>
