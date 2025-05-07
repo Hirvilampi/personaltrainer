@@ -5,6 +5,7 @@ import { ColDef } from "ag-grid-community";
 import AddCustomer from "./AddCustomer";
 import { Button } from "@mui/material";
 import EditCustomer from "./EditCustomer"
+import { CSVLink } from "react-csv";
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -27,12 +28,25 @@ export type TCustomer = {
     }
 }
 
+export type TCustomerCSV = {
+    firstname: string;
+    lastname: string;
+    streetaddress: string;
+    postcode: string;
+    city: string;
+    email: string;
+    phone: string;
+}
+
+
+
+
 function Customers() {
     const [customers, setCustomers] = useState<TCustomer[]>([]);
     const [filter, setFilter] = useState("");
-    const [customer, setCustomer] = useState<TCustomer[]>([]);
     const [editCustomerData, setEditCustomerData] = useState<TCustomer | null>(null);
     const [editModalOpen, setEditModalOpen] = useState(false);
+    const [customerCSV, setCustomerCSV] = useState<any[]>([]);
 
     const [columnDefs] = useState<ColDef<TCustomer>[]>([
         { field: "firstname" },
@@ -40,13 +54,13 @@ function Customers() {
         { field: "email" },
         { field: "phone" },
         {
-            headerName: "Toiminnot",
+            headerName: "Actions",
             cellRenderer: (params: ICellRendererParams<TCustomer>) => {
                 if (!params.data) return null;
-        
+
                 const useHref = params.data._links.self.href;
                 const { firstname, lastname, email, city, phone, postcode, streetaddress } = params.data;
-        
+
                 return (
                     <div style={{ display: 'flex', gap: '6px' }}>
                         <Button
@@ -71,6 +85,8 @@ function Customers() {
         }
     ]);
 
+
+
     const handleDelete = (href: string) => {
         if (window.confirm("Do you want to remove customer")) {
             fetch(href, { method: "DELETE" })
@@ -86,9 +102,6 @@ function Customers() {
     };
 
 
-    const openEditCustomerModal = (customer: TCustomer) => {
-        setEditCustomerData(customer);
-    };
 
     const handleEdit = (href: string, fname: string, sname: string, email: string,
         city: string, phone: string, postcod: string, street: string) => {
@@ -110,7 +123,6 @@ function Customers() {
         console.log("ASIAKAAN TIEDOT:", fname, sname, street, postcod, city, email, phone, href);
         setEditCustomerData(customerData);
         setEditModalOpen(true);
-
     };
 
     const fetchCustomers = () => {
@@ -124,9 +136,18 @@ function Customers() {
             .then(data => setCustomers(data._embedded.customers))
             .catch(error => console.error(error));
         if (customers != null) {
-            console.log('jotain haettiin', customers);
+            console.log('Haeittiin seuraavat asiakkaat:', customers);
         }
     }
+
+    useEffect(() => {
+        // asiakkaiden haun jälkeen
+        const csvData = customers.map(({ _links, ...rest }) => rest);
+        console.log("csvDATA", csvData);
+        setCustomerCSV(csvData);
+        console.log("setCustomerCSV", customerCSV);
+    }, [customers]);
+
 
     const addCustomer = (asiakas: TCustomer) => {
         console.log("UUDEN ASIAKKAAN TIEDOT", asiakas);
@@ -184,21 +205,26 @@ function Customers() {
 
     }
 
-
     useEffect(fetchCustomers, []);
 
     return (
         <>
-            <div>
+            <div style={{ padding: "10px", display: "flex", alignItems: "center" }}>
                 <AddCustomer addCustomer={addCustomer} />
+                
+                <CSVLink data={customerCSV} filename="customers.csv" style={{ textDecoration: 'none', marginLeft: '5px' }}>
+                    <Button variant="outlined" color="primary">
+                        Export customers
+                    </Button>
+                </CSVLink>
+                
                 <input
                     type="text"
-                    placeholder="Search from customers"
+                    placeholder="Search from table"
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
-                    style={{ marginBottom: 10, padding: 5, width: "20%" }}
+                    style={{ marginLeft: '5px', padding: 5, width: "20%" }}
                 />
-                <AddCustomer addCustomer={addCustomer} />
             </div>
 
             <div style={{ height: 800 }}>
@@ -216,7 +242,7 @@ function Customers() {
                     handleClose={() => setEditModalOpen(false)}
                 />
             )}
-      </>
+        </>
     )
 }
 

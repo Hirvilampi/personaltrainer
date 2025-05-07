@@ -20,13 +20,13 @@ export default function MainComponent() {
         {/***** Tab navigation *****/}
         <ul className="nav nav-tabs">
           <li className="nav-item">
-            <a id="1" className={"nav-link " + (activeTab === 1 ? "active" : "")} onClick={e => switchTab(e)}>Treenit</a>
+            <a id="1" className={"nav-link " + (activeTab === 1 ? "active" : "")} onClick={e => switchTab(e)}>Training sessions</a>
           </li>
           <li className="nav-item">
-            <a id="2" className={"nav-link " + (activeTab === 2 ? "active" : "")} onClick={e => switchTab(e)}>Asiakkaat</a>
+            <a id="2" className={"nav-link " + (activeTab === 2 ? "active" : "")} onClick={e => switchTab(e)}>Customers</a>
           </li>
           <li className="nav-item">
-            <a id="3" className={"nav-link " + (activeTab === 3 ? "active" : "")} onClick={e => switchTab(e)}>Kalenteri</a>
+            <a id="3" className={"nav-link " + (activeTab === 3 ? "active" : "")} onClick={e => switchTab(e)}>Calendar</a>
           </li>
         </ul>
 

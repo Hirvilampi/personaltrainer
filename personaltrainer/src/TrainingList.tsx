@@ -189,6 +189,7 @@ function TrainingList() {
         if (trainingsWithCustomers != null) {
             console.log('treenit ja käyttäjät haettiin', trainingsWithCustomers);
         }
+    
     }
 
     const fetchCombinedTrainings = async () => {
@@ -237,17 +238,18 @@ function TrainingList() {
 
     return (
         <>
-            <div >
+            <div style={{ padding: "10px", display: "flex", alignItems: "center" }}>
                 <AddTraining addTraining={addTraining} />
+
                 <input
                     type="text"
-                    placeholder="Search from trainings"
+                    placeholder="Search from table"
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
-                    style={{ marginBottom: 10, padding: 5, width: "20%" }}
+                    style={{ marginLeft: '10px', padding: '5px', width: "20%" }}
                 />
             </div>
-            <div>Hae</div>
+            
             <div style={{ height: 800 }} >
                 <AgGridReact<TTrainingsCustomerCustom>
                     rowData={trainingsWithLinks.length > 0 ? trainingsWithLinks : undefined}

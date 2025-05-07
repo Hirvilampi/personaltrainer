@@ -4,6 +4,10 @@ import { AllCommunityModule, ICellRendererParams, ModuleRegistry } from 'ag-grid
 import { ColDef } from "ag-grid-community";
 import { Button } from "@mui/material";
 import AddTraining from "./AddTraining";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import weekGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import FullCalendar from "@fullcalendar/react";
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -57,20 +61,17 @@ type TTrainingsCustomerCustom = TTrainingsCustomer & {
 }
 
 function Calendar() {
-    const [treenit, setTreenit] = useState<TTrainingsData[]>([]);
-    const [trainingsWithCustomers, setTrainingsWithCustomers] = useState<TTrainingsCustomer[]>([]);
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
     const [filter, setFilter] = useState("");
-
 
     const formatDate = (isoDate: string) => {
         const date = new Date(isoDate);
         return new Intl.DateTimeFormat("fi-FI", {
             dateStyle: "short",
             timeStyle: "short",
+            hour12: false,
         }).format(date);
     };
-
 
     const [columnDefs3] = useState<ColDef<TTrainingsCustomerCustom>[]>([
         { field: "date", headerName: "Date", valueFormatter: (params) => formatDate(params.value) },
@@ -84,111 +85,9 @@ function Calendar() {
                     ? `${c.firstname} ${c.lastname}`
                     : "Unknown customer";
             },
-
-        },
-        {
-            cellRenderer: (params: ICellRendererParams<TTrainingsCustomerCustom>) => {
-                if (!params.data) {
-                    return null;
-                } else {
-                    const useHref = params.data._links.self.href;
-                    return (
-                        <Button
-                            variant="outlined"
-                            color="error"
-                            size="small"
-                            onClick={() => handleDelete(useHref)}
-                        >
-                            Delete
-                        </Button>
-                    );
-                }
-
-            }
         }
     ]);
 
-    const addTraining = (treeni: TTrainingsData) => {
-        const uusiDate = new Date(treeni.date);
-        let iso = uusiDate.toISOString();
-        //     iso = iso.replace("Z", "+000");
-        console.log("ISOISOSISO: " + iso);
-        let uusiHref = treeni._links.customer.href;
-        uusiHref = uusiHref.replace("https://customer-rest-service-frontend-personaltrainer.2.rahtiapp.fi/",
-            "https://myserver.personaltrainer.api/"
-        );
-        const options = {
-            method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                date: iso,
-                activity: treeni.activity,
-                duration: treeni.duration,
-                customer: uusiHref
-            }),
-        };
-        console.log("TÄMÄ YRITETÄÄN POSTATA",
-            JSON.stringify({
-                date: iso,
-                activity: treeni.activity,
-                duration: treeni.duration,
-                customer: uusiHref,
-            }));
-        fetch(`${BASE_URL}/trainings`, options)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Treeniä ei voitu lisätä")
-                }
-                return response.json();
-            })
-            .then(() => fetchCombinedTrainings())
-            .catch(error => console.error("Virhe treenin lisäyksessä:", error));
-    }
-
-
-    const handleDelete = (href: string) => {
-        if (window.confirm("Haluatko poistaa treenin?")) {
-            fetch(href, { method: "DELETE" })
-                .then(response => {
-                    if (!response.ok) throw new Error("Poisto epäonnistui");
-                    fetchCombinedTrainings(); // päivitä lista poiston jälkeen
-                })
-                .catch(error => console.error(error));
-        }
-    };
-
-
-    const fetchTrainings = () => {
-        fetch(`${BASE_URL}/trainings`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Treenien haku epäonnistui")
-                }
-                return response.json();
-            })
-            .then(data => setTreenit(data._embedded.trainings))
-            .catch(error => console.error(error));
-        if (treenit != null) {
-            console.log('jotain haettiin', treenit);
-        }
-    }
-
-    const fetchTrainingsWitCustomers = () => {
-        fetch(`https://customer-rest-service-frontend-personaltrainer.2.rahtiapp.fi/api/gettrainings`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Treenien haku epäonnistui")
-                }
-                return response.json();
-            })
-            .then(data => setTrainingsWithCustomers(data))
-            .catch(error => console.error(error));
-        if (trainingsWithCustomers != null) {
-            console.log('treenit ja käyttäjät haettiin', trainingsWithCustomers);
-        }
-    }
 
     const fetchCombinedTrainings = async () => {
         try {
@@ -200,7 +99,6 @@ function Calendar() {
             if (!trainingsCustomersRes.ok || !trainingsLinksRes.ok) {
                 throw new Error("Haku epäonnistui");
             }
-
 
             const treeniData: TTrainingsCustomer[] = await trainingsCustomersRes.json();
             const linkkiCustomeriinData: { _embedded: { trainings: TTrainingsData[] } } = await trainingsLinksRes.json();
@@ -228,16 +126,32 @@ function Calendar() {
         }
     };
 
+    // Luo tapahtumat FullCalendar-komponentille
+    const calendarEvents = trainingsWithLinks.map((training) => {
+        const startTime = new Date(training.date);
+        const endTime = new Date(startTime.getTime() + parseInt(training.duration) * 60000); // Kesto minuutteina
+
+        return {
+            title: `${training.activity} - ${training.customer.firstname} ${training.customer.lastname}`,
+            start: startTime.toISOString(),
+            end: endTime.toISOString(),
+            extendedProps: {
+                customer: training.customer,
+                duration: training.duration,
+            },
+        };
+    });
+
+
     useEffect(() => {
-        fetchTrainings(),
-        fetchTrainingsWitCustomers(),
-        fetchCombinedTrainings();
+            fetchCombinedTrainings();
     }, []);
 
     return (
         <>
-            <div >
-                <AddTraining addTraining={addTraining} />
+     
+       <div style={{margin:"15px"}}>
+ {/* 
                 <input
                     type="text"
                     placeholder="Search from trainings"
@@ -245,8 +159,22 @@ function Calendar() {
                     onChange={(e) => setFilter(e.target.value)}
                     style={{ marginBottom: 10, padding: 5, width: "20%" }}
                 />
-            </div>
-            <div>Hae</div>
+*/}
+   
+
+            <FullCalendar
+                plugins={[dayGridPlugin, weekGridPlugin, timeGridPlugin]}
+                headerToolbar={{
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                  }}
+                initialView="dayGridMonth"
+                events={calendarEvents}
+                firstDay={1}
+            />
+
+{/* 
             <div style={{ height: 800 }} >
                 <AgGridReact<TTrainingsCustomerCustom>
                     rowData={trainingsWithLinks.length > 0 ? trainingsWithLinks : undefined}
@@ -254,8 +182,8 @@ function Calendar() {
                     quickFilterText={filter}
                 />
             </div>
-
-
+*/}
+         </div>
         </>
 
     )
