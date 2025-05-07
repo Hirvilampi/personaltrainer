@@ -4,7 +4,6 @@ import { AllCommunityModule, ICellRendererParams, ModuleRegistry } from 'ag-grid
 import { ColDef } from "ag-grid-community";
 import { Button } from "@mui/material";
 import AddTraining from "./AddTraining";
-import { useLocation } from "react-router-dom";
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -29,12 +28,6 @@ export type TTrainingsData = {
     }
 }
 
-export type TTrainings = {
-    date: string;
-    duration: string;
-    activity: string;
-}
-
 export type TTrainingsCustomer = {
     id: number,
     date: string;
@@ -57,11 +50,8 @@ type TTrainingsCustomerCustom = TTrainingsCustomer & {
 }
 
 function TrainingList() {
-    const [treenit, setTreenit] = useState<TTrainingsData[]>([]);
-    const [trainingsWithCustomers, setTrainingsWithCustomers] = useState<TTrainingsCustomer[]>([]);
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
     const [filter, setFilter] = useState("");
-    const location = useLocation();
 
     const formatDate = (isoDate: string) => {
         const date = new Date(isoDate);
@@ -71,7 +61,6 @@ function TrainingList() {
             hour12: false,
         }).format(date);
     };
-
 
     const [columnDefs3] = useState<ColDef<TTrainingsCustomerCustom>[]>([
         { field: "date", headerName: "Date", valueFormatter: (params) => formatDate(params.value) },
@@ -86,7 +75,6 @@ function TrainingList() {
                     ? `${c.firstname} ${c.lastname}`
                     : "Unknown customer";
             },
-
         },
         {   headerName: "Actions",width: 150,
             cellRenderer: (params: ICellRendererParams<TTrainingsCustomerCustom>) => {
@@ -105,7 +93,6 @@ function TrainingList() {
                         </Button>
                     );
                 }
-
             }
         }
     ]);
@@ -162,81 +149,48 @@ function TrainingList() {
     };
 
 
-    const fetchTrainings = () => {
-        fetch(`${BASE_URL}/trainings`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Treenien haku epäonnistui")
-                }
-                return response.json();
-            })
-            .then(data => setTreenit(data._embedded.trainings))
-            .catch(error => console.error(error));
-        if (treenit != null) {
-            console.log('jotain haettiin', treenit);
-        }
-    }
-
-    const fetchTrainingsWitCustomers = () => {
-        fetch(`https://customer-rest-service-frontend-personaltrainer.2.rahtiapp.fi/api/gettrainings`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Treenien haku epäonnistui")
-                }
-                return response.json();
-            })
-            .then(data => setTrainingsWithCustomers(data))
-            .catch(error => console.error(error));
-        if (trainingsWithCustomers != null) {
-            console.log('treenit ja käyttäjät haettiin', trainingsWithCustomers);
-        }
-    
-    }
-
-    const fetchCombinedTrainings = async () => {
-        try {
-            const [trainingsCustomersRes, trainingsLinksRes] = await Promise.all([
-                fetch(`${BASE_URL}/gettrainings`),
-                fetch(`${BASE_URL}/trainings`)
-            ]);
-
-            if (!trainingsCustomersRes.ok || !trainingsLinksRes.ok) {
-                throw new Error("Haku epäonnistui");
-            }
-
-
-            const treeniData: TTrainingsCustomer[] = await trainingsCustomersRes.json();
-            const linkkiCustomeriinData: { _embedded: { trainings: TTrainingsData[] } } = await trainingsLinksRes.json();
-            const linksMap = new Map<number, TTrainingsData["_links"]>();
-
-            for (const training of linkkiCustomeriinData._embedded.trainings) {
-                const idMatch = training._links.self.href.match(/\/trainings\/(\d+)$/);
-                if (idMatch) {
-                    const id = Number(idMatch[1]);
-                    linksMap.set(id, training._links);
-                }
-            }
-
-            const combined: TTrainingsCustomerCustom[] = treeniData
-                .map(training => ({
-                    ...training,
-                    _links: linksMap.get(training.id)!
-                }))
-                .filter(t => t._links); // suodata pois jos linkit puuttuvat
-
-            setTrainingsWithLinks(combined);
-
-        } catch (error) {
-            console.error("Virhe treenien haussa: ", error);
-        }
-    };
-
+  
+      // haetaan treenajä ja asiakkkaita koskeva data ja yhdistetään ne
+      const fetchCombinedTrainings = async () => {
+          try {
+              const [trainingsCustomersRes, trainingsLinksRes] = await Promise.all([
+                  fetch(`${BASE_URL}/gettrainings`),
+                  fetch(`${BASE_URL}/trainings`)
+              ]);
+  
+              if (!trainingsCustomersRes.ok || !trainingsLinksRes.ok) {
+                  throw new Error("Haku epäonnistui");
+              }
+  
+              const treeniData: TTrainingsCustomer[] = await trainingsCustomersRes.json();
+              const linkkiCustomeriinData: { _embedded: { trainings: TTrainingsData[] } } = await trainingsLinksRes.json();
+              const linksMap = new Map<number, TTrainingsData["_links"]>();
+  
+              for (const training of linkkiCustomeriinData._embedded.trainings) {
+                  const idMatch = training._links.self.href.match(/\/trainings\/(\d+)$/);
+                  if (idMatch) {
+                      const id = Number(idMatch[1]);
+                      linksMap.set(id, training._links);
+                  }
+              }
+  
+              const combined: TTrainingsCustomerCustom[] = treeniData
+                  .map(training => ({
+                      ...training,
+                      _links: linksMap.get(training.id)!
+                  }))
+                  .filter(t => t._links); // suodata pois jos linkit puuttuvat
+  
+              setTrainingsWithLinks(combined);
+  
+          } catch (error) {
+              console.error("Virhe treenien haussa: ", error);
+          }
+      };
+  
     useEffect(() => {
-        console.log("Route changed to:", location.pathname);
-        fetchTrainings(),
-        fetchTrainingsWitCustomers(),
         fetchCombinedTrainings();
-    }, [location.pathname]);
+    }, []);
 
     return (
         <>

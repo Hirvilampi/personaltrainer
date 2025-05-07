@@ -109,9 +109,10 @@ function Calendar() {
         };
     });
 
-
     useEffect(() => {
         fetchCombinedTrainings();
+        setEvents(calendarEvents);
+        setForceRenderKey((prevKey) => prevKey + 1);
     }, []); // Lataa tiedot aina, kun sijainti muuttuu.
 
     const handleReload = () => {
