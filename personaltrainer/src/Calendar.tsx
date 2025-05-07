@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ICellRendererParams, ModuleRegistry } from 'ag-grid-community';
 import { ColDef } from "ag-grid-community";
@@ -34,7 +35,7 @@ export type TTrainingsData = {
 
 export type TTrainings = {
     date: string;
-    duration: string;
+    duration: number;
     activity: string;
 }
 
@@ -62,8 +63,7 @@ type TTrainingsCustomerCustom = TTrainingsCustomer & {
 
 function Calendar() {
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
-    const [filter, setFilter] = useState("");
-
+    const location = useLocation();
     const formatDate = (isoDate: string) => {
         const date = new Date(isoDate);
         return new Intl.DateTimeFormat("fi-FI", {
@@ -144,13 +144,14 @@ function Calendar() {
 
 
     useEffect(() => {
-            fetchCombinedTrainings();
-    }, []);
+        console.log("Route changed:", location.pathname);
+        fetchCombinedTrainings();
+    }, [location.pathname]); // Lataa tiedot aina, kun sijainti muuttuu.
 
     return (
         <>
      
-       <div style={{margin:"15px"}}>
+       <div style={{margin:"35px"}}>
  {/* 
                 <input
                     type="text"
@@ -169,7 +170,7 @@ function Calendar() {
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                   }}
-                initialView="dayGridMonth"
+                initialView="timeGridWeek"
                 events={calendarEvents}
                 firstDay={1}
             />
