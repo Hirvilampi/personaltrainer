@@ -49,12 +49,21 @@ function Customers() {
     const [customerCSV, setCustomerCSV] = useState<any[]>([]);
 
     const [columnDefs] = useState<ColDef<TCustomer>[]>([
-        { field: "firstname" },
-        { field: "lastname" },
+        { 
+            headerName: "Customer", 
+            valueGetter: (params) => `${params.data?.firstname} ${params.data?.lastname}`,
+            width : 180, 
+        },
         { field: "email" },
-        { field: "phone" },
+        { field: "phone", width : 130, },
+        {
+            headerName: "Address",
+            width: 280,
+            valueGetter: (params) => `${params.data?.streetaddress}, ${params.data?.postcode}, ${params.data?.city}` 
+        },
         {
             headerName: "Actions",
+            width: 180,
             cellRenderer: (params: ICellRendererParams<TCustomer>) => {
                 if (!params.data) return null;
 
@@ -85,8 +94,6 @@ function Customers() {
         }
     ]);
 
-
-
     const handleDelete = (href: string) => {
         if (window.confirm("Do you want to remove customer")) {
             fetch(href, { method: "DELETE" })
@@ -100,8 +107,6 @@ function Customers() {
                 .catch(error => console.error(error));
         }
     };
-
-
 
     const handleEdit = (href: string, fname: string, sname: string, email: string,
         city: string, phone: string, postcod: string, street: string) => {
@@ -119,8 +124,6 @@ function Customers() {
                 customer: { href: "" },
             },
         };
-
-        console.log("ASIAKAAN TIEDOT:", fname, sname, street, postcod, city, email, phone, href);
         setEditCustomerData(customerData);
         setEditModalOpen(true);
     };
@@ -145,7 +148,6 @@ function Customers() {
         const csvData = customers.map(({ _links, ...rest }) => rest);
         console.log("csvDATA", csvData);
         setCustomerCSV(csvData);
-        console.log("setCustomerCSV", customerCSV);
     }, [customers]);
 
 

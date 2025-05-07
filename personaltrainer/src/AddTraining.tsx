@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -11,12 +11,9 @@ import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { SelectChangeEvent } from "@mui/material";
-
-
 import { TTrainingsData } from './TrainingList';
 
 const BASE_URL = 'https://customer-rest-service-frontend-personaltrainer.2.rahtiapp.fi/api';
-
 
 export type TCustomer = {
     firstname: string;
@@ -36,8 +33,6 @@ export type TCustomer = {
 type TAddTrainingsDataProps = {
     addTraining: (treeni: TTrainingsData) => void;
 }
-
-
 
 export default function AddTraining({ addTraining }: TAddTrainingsDataProps) {
     const [open, setOpen] = useState(false);
@@ -91,8 +86,6 @@ export default function AddTraining({ addTraining }: TAddTrainingsDataProps) {
         }));
       };
     
-
-
     return (
         <>
             <Button variant="outlined" onClick={handleClickOpen} style={{ margin: "1em 0" }}>
@@ -128,7 +121,7 @@ export default function AddTraining({ addTraining }: TAddTrainingsDataProps) {
                         margin="dense"
                         id="duration"
                         name="duration"
-                        label="Duration"
+                        label="Duration (mins)"
                         type="text"
                         fullWidth
                         variant="standard"
