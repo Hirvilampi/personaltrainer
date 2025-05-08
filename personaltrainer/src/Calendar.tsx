@@ -50,11 +50,8 @@ type TTrainingsCustomerCustom = TTrainingsCustomer & {
     _links: TTrainingsData["_links"]
 }
 
-type CalendarProps = {
-    isActive: boolean;
-};
 
-function Calendar({isActive} : CalendarProps) {
+function Calendar() {
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
     const [events, setEvents] = useState<any>([]);
     const [forceRenderKey, setForceRenderKey] = useState(0); // Tila uudelleenrenderöinnin pakottamiseen
@@ -98,25 +95,29 @@ function Calendar({isActive} : CalendarProps) {
             console.error("Virhe treenien haussa: ", error);
         }
     };
+/*
+    // Luo tapahtumat FullCalendar-komponentille
+    const calendarEvents = trainingsWithLinks.map((training) => {
+        const startTime = new Date(training.date);
+        const endTime = new Date(startTime.getTime() + parseInt(training.duration) * 60000); // Kesto minuutteina
 
+        return {
+            title: `${training.activity} - ${training.customer.firstname} ${training.customer.lastname}`,
+            start: startTime.toISOString(),
+            end: endTime.toISOString(),
+            extendedProps: {
+                customer: training.customer,
+                duration: training.duration,
+            },
+        };
+    });
+*/
     useEffect(() => {
-        const timer = setTimeout(() => {
-            if (calendarRef.current) {
-                const calendarApi = calendarRef.current.getApi();
-                calendarApi.render();       // force full re-render
-                calendarApi.updateSize();   // ensure layout is correct
-            }
-        }, 100); // pieni viive, jos renderöinti tapahtuu Tabin avauksessa
-        
-        setForceRenderKey((prevKey) => prevKey + 1);
-        console.log("USE EFFECT 1 - fetchcombinedtrainings ja lisää forcerenderkey +1");
-        return () => clearTimeout(timer);        
-    }, [forceRenderKey]); // kun kalenteri ladataan uudelleen
-
-    useEffect(() => {
+        console.log("-- TrainingsWithLinks ladataan");
         const events = trainingsWithLinks.map((training) => {
             const startTime = new Date(training.date);
             const endTime = new Date(startTime.getTime() + parseInt(training.duration) * 60000);
+    
             return {
                 title: `${training.activity} - ${training.customer.firstname} ${training.customer.lastname}`,
                 start: startTime.toISOString(),
@@ -127,31 +128,47 @@ function Calendar({isActive} : CalendarProps) {
                 },
             };
         });
-        setEvents(events);      
-        console.log("USE EFFECT 3 - TRAININGSWITHLINKS");
-    }, [trainingsWithLinks]);
+        setEvents(events);
+        setForceRenderKey((prevKey) => prevKey + 1);
+    }, [trainingsWithLinks || firsttimeFecth==false]);
 
-useEffect(() => {
-    if (!firsttimeFecth){
-        fetchCombinedTrainings();
-        setFirstimeFecth(true);
-    }
- //   
-});
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (calendarRef.current) {
+                const calendarApi = calendarRef.current.getApi();
+                calendarApi.render();       
+                calendarApi.updateSize();   
+            }
+        }, 100);
+        setForceRenderKey((prevKey) => prevKey + 1);
+        return () => clearTimeout(timer);
+    }, [forceRenderKey]);
 
-useEffect(() => {
-    if (isActive) {
+    useEffect(() => {
+        console.log("useEffect SIJANTI muuttuu");
+        setFirstimeFecth(false);
         fetchCombinedTrainings();
-        console.log("isActive is active!!")
-    }
-}, [isActive]);
+        setEvents(events);
+        setForceRenderKey((prevKey) => prevKey + 1);
+    }, []); // Lataa tiedot aina, kun sijainti muuttuu.
 
     const handleReload = () => {
         fetchCombinedTrainings(); // Lataa sivu uudelleen
    //    setEvents(calendarEvents);
         setForceRenderKey((prevKey) => prevKey + 1);
-        console.log("UPDATELOAD");
+        console.log("HANDLERELOAD");
     };
+
+    useEffect(() => {
+        console.log("EKAN KERRAN LATAUS tultiin ekaa ja ehkä ainoaa kertaa ");
+        fetchCombinedTrainings();
+        setEvents(events);
+        setForceRenderKey((prevKey) => prevKey + 1);
+        setFirstimeFecth(true);
+        handleReload();
+    }, [firsttimeFecth==false]);
+
+
 
     return (
         <>
@@ -175,7 +192,7 @@ useEffect(() => {
                 initialView="timeGridWeek"
                 events={events}
                 firstDay={1}
-                slotMinTime="07:00:00"
+                scrollTime={'06:00:00'}
                 locale="fi"
             />
 

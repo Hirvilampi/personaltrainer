@@ -44,12 +44,12 @@ export default function MainComponent() {
 
        {/***** Tab 3 - Kalenteri *****/}
         <div className={"container " + (activeTab === 3 ? "" : "display-none")}>
-          <Calendar isActive={true} />
+          <Calendar />
         </div>
 
            {/***** Tab 4- chart *****/}
            <div className={"container " + (activeTab === 4 ? "" : "display-none")}>
-          <Chart isActive={true}/>
+          <Chart />
         </div>
 
       </div>

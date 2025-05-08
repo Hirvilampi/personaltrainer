@@ -49,11 +49,7 @@ export type TTrainingsCustomer = {
 
 }
 
-type ChartProps = {
-    isActive: boolean;
-};
-
-function Chart({isActive}:ChartProps) {
+function Chart() {
     const [treenit, setTreenit] = useState<TTrainings[]>([]);
     const [firsttimeFecth, setFirstimeFecth] =useState(false);
 
@@ -116,12 +112,6 @@ function Chart({isActive}:ChartProps) {
             setFirstimeFecth(true);
         }
     }, []);
-
-    useEffect(() => {
-        if (isActive) {
-            fetchTrainings();
-        }
-    }, [isActive]);
 
     const handleReload = () => {
         fetchTrainings(); // Lataa sivu uudelleen
