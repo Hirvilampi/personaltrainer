@@ -58,7 +58,7 @@ export default function EditCustomer({editCustomer, customer, open, handleClose,
             <>
                 <Dialog  open={open} onClose={handleClose}>
                     <form  onSubmit={handleSubmit}>
-                    <DialogTitle>Add customer</DialogTitle>
+                    <DialogTitle>Edit customer</DialogTitle>
                     <DialogContent>
     
                         <TextField
