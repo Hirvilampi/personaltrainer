@@ -54,7 +54,6 @@ type TTrainingsCustomerCustom = TTrainingsCustomer & {
 function Calendar() {
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
     const [events, setEvents] = useState<EventInput>([]);
- //   const [forceRenderKey, setForceRenderKey] = useState(0); // Tila uudelleenrenderöinnin pakottamiseen
     const calendarRef = useRef<any>(null); // viite kalenterikomponenttii
     const [isFirstLoad, setIsFirstLoad] = useState(true); // Tila ensimmäiselle lataukselle
 
@@ -95,19 +94,14 @@ function Calendar() {
             console.error("Virhe treenien haussa: ", error);
         }
     };
-/*
-    useEffect(() => {
-        console.log("useEffect SIJANTI muuttuu");
-        const fetchData = async () => { await fetchCombinedTrainings(); };
-          fetchData();
-    }, []); // Lataa tiedot aina, kun sijainti muuttuu.
-*/
+
+
     useEffect(() => {
         console.log("-- TrainingsWithLinks ladataan");
         const events = trainingsWithLinks.map((training) => {
             const startTime = new Date(training.date);
             const endTime = new Date(startTime.getTime() + parseInt(training.duration) * 60000);
-    
+
             return {
                 title: `${training.activity} - ${training.customer.firstname} ${training.customer.lastname}`,
                 start: startTime.toISOString(),
@@ -119,94 +113,24 @@ function Calendar() {
             };
         });
         setEvents(events);
-  //      setForceRenderKey((prevKey) => prevKey + 1);
     }, [trainingsWithLinks]);
 
-/*
-    const [intervalDuration, setIntervalDuration] = useState(50); // Alkuarvo 500ms
-    const [iteration, setIteration] = useState(0); // Iteraatioiden määrä
-
     useEffect(() => {
-        // Aseta intervalli
+        console.log("eka lataus, puoli sekuntia");
         const interval = setInterval(() => {
-            fetchCombinedTrainings(); // Hae tiedot
-            console.log(`Fetch iteration ${iteration}, interval: ${intervalDuration}ms`);
-
-            // Kasvata latausväli eksponentiaalisesti
-            setIntervalDuration((prevValue) => prevValue * 2); // Kerroin 2 kasvattaa eksponentiaalisesti
-            setIteration((prevIteration) => prevIteration + 1); // Päivitä iteraatiolaskuri
-        }, intervalDuration);
-
-        // Tyhjennä vanha intervalli, kun arvo muuttuu
+            fetchCombinedTrainings();
+        }, 500); // 5 minuutin välein
+        setIsFirstLoad(false);
         return () => clearInterval(interval);
-    }, [intervalDuration, iteration]); // Kuuntele muutoksia intervalDuration- ja iteration-tiloissa
-
+    }, [isFirstLoad]);
 
     useEffect(() => {
-        let interval: NodeJS.Timeout;
-
-        if (isFirstLoad) {
-            const timeout = setTimeout(() => {
-                fetchCombinedTrainings();
-            }, 250); // 0,25 minuutin välein
-            setIsFirstLoad(false);
-            return () => clearInterval(interval);
-        } else  {
-                        // Lataa tiedot 10 minuutin välein
-                        interval = setInterval(() => {
-                            fetchCombinedTrainings();
-                            console.log("Regular fetch every 10 minutes");
-                   }, 24 * 60 * 60 * 1000); // 10 minuuttia millisekunteina
-                }
-
-       return () => clearInterval(interval); // Tyhjennä intervalli, kun komponentti tuhotaan
-     }, [isFirstLoad]); // Riippuvuus ensimmäisen latauksen tilasta
-
-
-     useEffect(() => {
-        let timeout: number; // Timeout ensimmäiselle lataukselle
-        let interval: number; // Intervalli seuraaville latauksille
-
-        if (isFirstLoad) {
-            // Ensimmäinen lataus 0,5 sekunnin kuluttua
-            timeout = window.setTimeout(() => {
-                fetchCombinedTrainings();
-                console.log("First fetch after 0.5 seconds");
-                setIsFirstLoad(false); // Päivitä tila, jotta siirrytään 24 tunnin intervalliin
-            }, 500);
-        } else {
-            // Lataa tiedot 24 tunnin välein
-            interval = window.setInterval(() => {
-                fetchCombinedTrainings();
-                console.log("Regular fetch every 24 hours");
-            }, 24 * 60 * 60 * 1000); // 24 tuntia millisekunteina
-        }
-            // Palautetaan cleanup-funktio
-    return () => {
-        clearTimeout(timeout); // Tyhjennä timeout, jos komponentti tuhotaan ennen ensimmäistä latausta
-        clearInterval(interval); // Tyhjennä intervalli, jos komponentti tuhotaan
-    };
-    }, [isFirstLoad]); // Riippuu ensimmäisen latauksen tilasta
-
-*/
-
-useEffect(() => {
-    console.log("eka lataus, puoli sekuntia");
-    const interval = setInterval(() => {
-        fetchCombinedTrainings();
-    }, 500); // 5 minuutin välein
-    setIsFirstLoad(false);
-    return () => clearInterval(interval);
-}, [isFirstLoad]);
-
-useEffect(() => {
-    console.log("24h kuluttua");
-    const interval = setInterval(() => {
-        fetchCombinedTrainings();
-    },  30 * 1000); // 24 tunnin välein
-    return () => clearInterval(interval);
-}, [!isFirstLoad]);
-    
+        console.log("24h kuluttua");
+        const interval = setInterval(() => {
+            fetchCombinedTrainings();
+        }, 30 * 1000); // 24 tunnin välein
+        return () => clearInterval(interval);
+    }, [!isFirstLoad]);
 
     useEffect(() => {
         if (calendarRef.current) {
@@ -217,53 +141,42 @@ useEffect(() => {
             console.log("Kalenteri päivitetty");
         }
     }, [events]);
-    
-/*
-    useEffect(() => {
-        const interval = setInterval(() => {
-            fetchCombinedTrainings();
-        }, 5 * 60 * 1000); // 5 minuutin välein
-    
-        return () => clearInterval(interval);
-    }, []);
-*/
+
     const handleReload = () => {
         fetchCombinedTrainings(); // Lataa sivu uudelleen
-   //    setEvents(calendarEvents);
-  //      setForceRenderKey((prevKey) => prevKey + 1);
         console.log("HANDLERELOAD");
     };
 
     return (
         <>
-     <div style={{margin: "20px"}}>
-     <button onClick={handleReload} style={{ padding: "10px", margin: "10px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
-            Update calendar
-        </button>
-     </div>
+            <div style={{ margin: "20px" }}>
+                <button onClick={handleReload} style={{ padding: "10px", margin: "10px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}>
+                    Update calendar
+                </button>
+            </div>
 
-       <div style={{margin:"35px", width:"1100" }}>
-            <FullCalendar
-              height="auto"
+            <div style={{ margin: "35px", width: "1100" }}>
+                <FullCalendar
+                    height="auto"
 
-                plugins={[dayGridPlugin, timeGridPlugin]}
-                headerToolbar={{
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay',
-                  }}
-                initialView="timeGridWeek"
-                events={events}
-                firstDay={1}
-                scrollTime="06:00:00"
-                slotMinTime="07:00:00"
-                locale="fi"
-  //              ref={calendarRef}
- //               key={forceRenderKey}
-            />
+                    plugins={[dayGridPlugin, timeGridPlugin]}
+                    headerToolbar={{
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay',
+                    }}
+                    initialView="timeGridWeek"
+                    events={events}
+                    firstDay={1}
+                    scrollTime="06:00:00"
+                    slotMinTime="07:00:00"
+                    locale="fi"
+                //              ref={calendarRef}
+                //               key={forceRenderKey}
+                />
 
 
-         </div>
+            </div>
         </>
 
     )
