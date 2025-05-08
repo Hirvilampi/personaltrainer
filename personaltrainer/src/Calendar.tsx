@@ -3,6 +3,7 @@ import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
+import { EventInput } from '@fullcalendar/core';
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -52,9 +53,10 @@ type TTrainingsCustomerCustom = TTrainingsCustomer & {
 
 function Calendar() {
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
-    const [events, setEvents] = useState<any>([]);
-    const [forceRenderKey, setForceRenderKey] = useState(0); // Tila uudelleenrenderöinnin pakottamiseen
+    const [events, setEvents] = useState<EventInput>([]);
+ //   const [forceRenderKey, setForceRenderKey] = useState(0); // Tila uudelleenrenderöinnin pakottamiseen
     const calendarRef = useRef<any>(null); // viite kalenterikomponenttii
+    const [isFirstLoad, setIsFirstLoad] = useState(true); // Tila ensimmäiselle lataukselle
 
     // haetaan treenajä ja asiakkkaita koskeva data ja yhdistetään ne
     const fetchCombinedTrainings = async () => {
@@ -93,13 +95,13 @@ function Calendar() {
             console.error("Virhe treenien haussa: ", error);
         }
     };
-
+/*
     useEffect(() => {
         console.log("useEffect SIJANTI muuttuu");
         const fetchData = async () => { await fetchCombinedTrainings(); };
           fetchData();
     }, []); // Lataa tiedot aina, kun sijainti muuttuu.
-
+*/
     useEffect(() => {
         console.log("-- TrainingsWithLinks ladataan");
         const events = trainingsWithLinks.map((training) => {
@@ -117,35 +119,118 @@ function Calendar() {
             };
         });
         setEvents(events);
-        setForceRenderKey((prevKey) => prevKey + 1);
+  //      setForceRenderKey((prevKey) => prevKey + 1);
     }, [trainingsWithLinks]);
 
+/*
+    const [intervalDuration, setIntervalDuration] = useState(50); // Alkuarvo 500ms
+    const [iteration, setIteration] = useState(0); // Iteraatioiden määrä
+
     useEffect(() => {
-        const timer = setTimeout(() => {
-            if (calendarRef.current) {
-                const calendarApi = calendarRef.current.getApi();
-                calendarApi?.scrollToTime("06:00:00"); 
-                calendarApi.render();       
-                calendarApi.updateSize();   
-            }
-            
-        }, 100);
+        // Aseta intervalli
+        const interval = setInterval(() => {
+            fetchCombinedTrainings(); // Hae tiedot
+            console.log(`Fetch iteration ${iteration}, interval: ${intervalDuration}ms`);
+
+            // Kasvata latausväli eksponentiaalisesti
+            setIntervalDuration((prevValue) => prevValue * 2); // Kerroin 2 kasvattaa eksponentiaalisesti
+            setIteration((prevIteration) => prevIteration + 1); // Päivitä iteraatiolaskuri
+        }, intervalDuration);
+
+        // Tyhjennä vanha intervalli, kun arvo muuttuu
+        return () => clearInterval(interval);
+    }, [intervalDuration, iteration]); // Kuuntele muutoksia intervalDuration- ja iteration-tiloissa
+
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+
+        if (isFirstLoad) {
+            const timeout = setTimeout(() => {
+                fetchCombinedTrainings();
+            }, 250); // 0,25 minuutin välein
+            setIsFirstLoad(false);
+            return () => clearInterval(interval);
+        } else  {
+                        // Lataa tiedot 10 minuutin välein
+                        interval = setInterval(() => {
+                            fetchCombinedTrainings();
+                            console.log("Regular fetch every 10 minutes");
+                   }, 24 * 60 * 60 * 1000); // 10 minuuttia millisekunteina
+                }
+
+       return () => clearInterval(interval); // Tyhjennä intervalli, kun komponentti tuhotaan
+     }, [isFirstLoad]); // Riippuvuus ensimmäisen latauksen tilasta
+
+
+     useEffect(() => {
+        let timeout: number; // Timeout ensimmäiselle lataukselle
+        let interval: number; // Intervalli seuraaville latauksille
+
+        if (isFirstLoad) {
+            // Ensimmäinen lataus 0,5 sekunnin kuluttua
+            timeout = window.setTimeout(() => {
+                fetchCombinedTrainings();
+                console.log("First fetch after 0.5 seconds");
+                setIsFirstLoad(false); // Päivitä tila, jotta siirrytään 24 tunnin intervalliin
+            }, 500);
+        } else {
+            // Lataa tiedot 24 tunnin välein
+            interval = window.setInterval(() => {
+                fetchCombinedTrainings();
+                console.log("Regular fetch every 24 hours");
+            }, 24 * 60 * 60 * 1000); // 24 tuntia millisekunteina
+        }
+            // Palautetaan cleanup-funktio
+    return () => {
+        clearTimeout(timeout); // Tyhjennä timeout, jos komponentti tuhotaan ennen ensimmäistä latausta
+        clearInterval(interval); // Tyhjennä intervalli, jos komponentti tuhotaan
+    };
+    }, [isFirstLoad]); // Riippuu ensimmäisen latauksen tilasta
+
+*/
+
+useEffect(() => {
+    console.log("eka lataus, puoli sekuntia");
+    const interval = setInterval(() => {
         fetchCombinedTrainings();
-        return () => clearTimeout(timer);
-    }, [forceRenderKey]);
+    }, 500); // 5 minuutin välein
+    setIsFirstLoad(false);
+    return () => clearInterval(interval);
+}, [isFirstLoad]);
+
+useEffect(() => {
+    console.log("24h kuluttua");
+    const interval = setInterval(() => {
+        fetchCombinedTrainings();
+    },  30 * 1000); // 24 tunnin välein
+    return () => clearInterval(interval);
+}, [!isFirstLoad]);
+    
 
     useEffect(() => {
-        console.log("useEffect SIJANTI muuttuu");
-        const fetchData = async () => {
-            await fetchCombinedTrainings();
-          };
-          fetchData();
-    }, []); // Lataa tiedot aina, kun sijainti muuttuu.
-
+        if (calendarRef.current) {
+            const calendarApi = calendarRef.current.getApi();
+            calendarApi.removeAllEvents();
+            events.forEach((event: EventInput) => calendarApi.addEvent(event));
+            calendarApi.updateSize();
+            console.log("Kalenteri päivitetty");
+        }
+    }, [events]);
+    
+/*
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchCombinedTrainings();
+        }, 5 * 60 * 1000); // 5 minuutin välein
+    
+        return () => clearInterval(interval);
+    }, []);
+*/
     const handleReload = () => {
         fetchCombinedTrainings(); // Lataa sivu uudelleen
    //    setEvents(calendarEvents);
-        setForceRenderKey((prevKey) => prevKey + 1);
+  //      setForceRenderKey((prevKey) => prevKey + 1);
         console.log("HANDLERELOAD");
     };
 
@@ -171,8 +256,9 @@ function Calendar() {
                 events={events}
                 firstDay={1}
                 scrollTime="06:00:00"
+                slotMinTime="07:00:00"
                 locale="fi"
-                ref={calendarRef}
+  //              ref={calendarRef}
  //               key={forceRenderKey}
             />
 
