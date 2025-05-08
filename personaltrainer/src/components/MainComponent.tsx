@@ -37,7 +37,6 @@ export default function MainComponent() {
           <TrainingList />
         </div>
 
-
         {/***** Tab 2 - Asiakkaat *****/}
         <div className={"container " + (activeTab === 2 ? "" : "display-none")}>
           <Customers />
@@ -45,12 +44,12 @@ export default function MainComponent() {
 
        {/***** Tab 3 - Kalenteri *****/}
         <div className={"container " + (activeTab === 3 ? "" : "display-none")}>
-          <Calendar />
+          <Calendar isActive={true} />
         </div>
 
            {/***** Tab 4- chart *****/}
            <div className={"container " + (activeTab === 4 ? "" : "display-none")}>
-          <Chart />
+          <Chart isActive={true}/>
         </div>
 
       </div>

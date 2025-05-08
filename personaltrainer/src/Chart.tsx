@@ -49,8 +49,13 @@ export type TTrainingsCustomer = {
 
 }
 
-function Chart() {
+type ChartProps = {
+    isActive: boolean;
+};
+
+function Chart({isActive}:ChartProps) {
     const [treenit, setTreenit] = useState<TTrainings[]>([]);
+    const [firsttimeFecth, setFirstimeFecth] =useState(false);
 
     const fetchTrainings = () => {
         fetch(`${BASE_URL}/trainings`)
@@ -91,9 +96,7 @@ function Chart() {
             totalDuration: duration,
         })));
 
-
         // Convert the Map to an array of objects
-
         const tulos = Array.from(activityAndDurations.entries()).map(([activity, duration]) => ({
             name: activity,
             duration: duration,
@@ -108,8 +111,17 @@ function Chart() {
     console.log(trainingActivities);
 
     useEffect(() => {
-        fetchTrainings();
+        if (!firsttimeFecth){
+            fetchTrainings();
+            setFirstimeFecth(true);
+        }
     }, []);
+
+    useEffect(() => {
+        if (isActive) {
+            fetchTrainings();
+        }
+    }, [isActive]);
 
     const handleReload = () => {
         fetchTrainings(); // Lataa sivu uudelleen

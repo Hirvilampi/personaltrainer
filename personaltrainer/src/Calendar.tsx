@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import dayGridPlugin from "@fullcalendar/daygrid";
 import weekGridPlugin from "@fullcalendar/daygrid";
@@ -50,10 +50,16 @@ type TTrainingsCustomerCustom = TTrainingsCustomer & {
     _links: TTrainingsData["_links"]
 }
 
-function Calendar() {
+type CalendarProps = {
+    isActive: boolean;
+};
+
+function Calendar({isActive} : CalendarProps) {
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
     const [events, setEvents] = useState<any>([]);
     const [forceRenderKey, setForceRenderKey] = useState(0); // Tila uudelleenrenderöinnin pakottamiseen
+    const calendarRef = useRef<any>(null); // viite kalenterikomponenttii
+    const [firsttimeFecth, setFirstimeFecth] =useState(false);
 
     // haetaan treenajä ja asiakkkaita koskeva data ja yhdistetään ne
     const fetchCombinedTrainings = async () => {
@@ -93,32 +99,58 @@ function Calendar() {
         }
     };
 
-    // Luo tapahtumat FullCalendar-komponentille
-    const calendarEvents = trainingsWithLinks.map((training) => {
-        const startTime = new Date(training.date);
-        const endTime = new Date(startTime.getTime() + parseInt(training.duration) * 60000); // Kesto minuutteina
-
-        return {
-            title: `${training.activity} - ${training.customer.firstname} ${training.customer.lastname}`,
-            start: startTime.toISOString(),
-            end: endTime.toISOString(),
-            extendedProps: {
-                customer: training.customer,
-                duration: training.duration,
-            },
-        };
-    });
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (calendarRef.current) {
+                const calendarApi = calendarRef.current.getApi();
+                calendarApi.render();       // force full re-render
+                calendarApi.updateSize();   // ensure layout is correct
+            }
+        }, 100); // pieni viive, jos renderöinti tapahtuu Tabin avauksessa
+        
+        setForceRenderKey((prevKey) => prevKey + 1);
+        console.log("USE EFFECT 1 - fetchcombinedtrainings ja lisää forcerenderkey +1");
+        return () => clearTimeout(timer);        
+    }, [forceRenderKey]); // kun kalenteri ladataan uudelleen
 
     useEffect(() => {
+        const events = trainingsWithLinks.map((training) => {
+            const startTime = new Date(training.date);
+            const endTime = new Date(startTime.getTime() + parseInt(training.duration) * 60000);
+            return {
+                title: `${training.activity} - ${training.customer.firstname} ${training.customer.lastname}`,
+                start: startTime.toISOString(),
+                end: endTime.toISOString(),
+                extendedProps: {
+                    customer: training.customer,
+                    duration: training.duration,
+                },
+            };
+        });
+        setEvents(events);      
+        console.log("USE EFFECT 3 - TRAININGSWITHLINKS");
+    }, [trainingsWithLinks]);
+
+useEffect(() => {
+    if (!firsttimeFecth){
         fetchCombinedTrainings();
-        setEvents(calendarEvents);
-        setForceRenderKey((prevKey) => prevKey + 1);
-    }, []); // Lataa tiedot aina, kun sijainti muuttuu.
+        setFirstimeFecth(true);
+    }
+ //   
+});
+
+useEffect(() => {
+    if (isActive) {
+        fetchCombinedTrainings();
+        console.log("isActive is active!!")
+    }
+}, [isActive]);
 
     const handleReload = () => {
         fetchCombinedTrainings(); // Lataa sivu uudelleen
-        setEvents(calendarEvents);
+   //    setEvents(calendarEvents);
         setForceRenderKey((prevKey) => prevKey + 1);
+        console.log("UPDATELOAD");
     };
 
     return (
@@ -129,9 +161,10 @@ function Calendar() {
         </button>
      </div>
 
-       <div style={{margin:"35px"}}>
-
+       <div style={{margin:"35px", width:"1000" }}>
             <FullCalendar
+              height="auto"
+                ref={calendarRef}
                 key={forceRenderKey}
                 plugins={[dayGridPlugin, weekGridPlugin, timeGridPlugin]}
                 headerToolbar={{
