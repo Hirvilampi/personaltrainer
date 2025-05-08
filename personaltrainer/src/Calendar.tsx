@@ -55,7 +55,6 @@ function Calendar() {
     const [events, setEvents] = useState<any>([]);
     const [forceRenderKey, setForceRenderKey] = useState(0); // Tila uudelleenrenderöinnin pakottamiseen
     const calendarRef = useRef<any>(null); // viite kalenterikomponenttii
-    const [firsttimeFecth, setFirstimeFecth] =useState(false);
 
     // haetaan treenajä ja asiakkkaita koskeva data ja yhdistetään ne
     const fetchCombinedTrainings = async () => {
@@ -94,23 +93,13 @@ function Calendar() {
             console.error("Virhe treenien haussa: ", error);
         }
     };
-/*
-    // Luo tapahtumat FullCalendar-komponentille
-    const calendarEvents = trainingsWithLinks.map((training) => {
-        const startTime = new Date(training.date);
-        const endTime = new Date(startTime.getTime() + parseInt(training.duration) * 60000); // Kesto minuutteina
 
-        return {
-            title: `${training.activity} - ${training.customer.firstname} ${training.customer.lastname}`,
-            start: startTime.toISOString(),
-            end: endTime.toISOString(),
-            extendedProps: {
-                customer: training.customer,
-                duration: training.duration,
-            },
-        };
-    });
-*/
+    useEffect(() => {
+        console.log("useEffect SIJANTI muuttuu");
+        const fetchData = async () => { await fetchCombinedTrainings(); };
+          fetchData();
+    }, []); // Lataa tiedot aina, kun sijainti muuttuu.
+
     useEffect(() => {
         console.log("-- TrainingsWithLinks ladataan");
         const events = trainingsWithLinks.map((training) => {
@@ -129,7 +118,7 @@ function Calendar() {
         });
         setEvents(events);
         setForceRenderKey((prevKey) => prevKey + 1);
-    }, [trainingsWithLinks || firsttimeFecth==false]);
+    }, [trainingsWithLinks]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -159,17 +148,6 @@ function Calendar() {
         setForceRenderKey((prevKey) => prevKey + 1);
         console.log("HANDLERELOAD");
     };
-
-    useEffect(() => {
-        console.log("EKAN KERRAN LATAUS tultiin ekaa ja ehkä ainoaa kertaa ");
-        fetchCombinedTrainings();
-        setEvents(events);
-        setForceRenderKey((prevKey) => prevKey + 1);
-        setFirstimeFecth(true);
-        handleReload();
-    }, [firsttimeFecth==false]);
-
-
 
     return (
         <>

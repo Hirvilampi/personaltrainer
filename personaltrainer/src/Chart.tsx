@@ -51,7 +51,6 @@ export type TTrainingsCustomer = {
 
 function Chart() {
     const [treenit, setTreenit] = useState<TTrainings[]>([]);
-    const [firsttimeFecth, setFirstimeFecth] =useState(false);
 
     const fetchTrainings = () => {
         fetch(`${BASE_URL}/trainings`)
@@ -107,9 +106,7 @@ function Chart() {
     console.log(trainingActivities);
 
     useEffect(() => {
-        const fetchData = async () => {
-            await fetchTrainings();
-          };
+        const fetchData = async () => { await fetchTrainings(); };
           fetchData();
     }, []);
 
