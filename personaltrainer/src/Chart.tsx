@@ -107,10 +107,10 @@ function Chart() {
     console.log(trainingActivities);
 
     useEffect(() => {
-        if (!firsttimeFecth){
-            fetchTrainings();
-            setFirstimeFecth(true);
-        }
+        const fetchData = async () => {
+            await fetchTrainings();
+          };
+          fetchData();
     }, []);
 
     const handleReload = () => {
@@ -128,7 +128,7 @@ function Chart() {
 
             <div style={{ margin: "35px"}}>
 
-                <BarChart data={trainingActivities} width={1000} height={600} barSize={110} margin={{
+                <BarChart data={trainingActivities} width={1100} height={600} barSize={110} margin={{
                     top: 5,
                     right: 30,
                     left: 20,

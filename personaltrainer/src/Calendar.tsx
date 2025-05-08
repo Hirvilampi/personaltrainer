@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import dayGridPlugin from "@fullcalendar/daygrid";
-import weekGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import FullCalendar from "@fullcalendar/react";
 
@@ -136,20 +135,22 @@ function Calendar() {
         const timer = setTimeout(() => {
             if (calendarRef.current) {
                 const calendarApi = calendarRef.current.getApi();
+                calendarApi?.scrollToTime("06:00:00"); 
                 calendarApi.render();       
                 calendarApi.updateSize();   
             }
+            
         }, 100);
-        setForceRenderKey((prevKey) => prevKey + 1);
+        fetchCombinedTrainings();
         return () => clearTimeout(timer);
     }, [forceRenderKey]);
 
     useEffect(() => {
         console.log("useEffect SIJANTI muuttuu");
-        setFirstimeFecth(false);
-        fetchCombinedTrainings();
-        setEvents(events);
-        setForceRenderKey((prevKey) => prevKey + 1);
+        const fetchData = async () => {
+            await fetchCombinedTrainings();
+          };
+          fetchData();
     }, []); // Lataa tiedot aina, kun sijainti muuttuu.
 
     const handleReload = () => {
@@ -178,12 +179,11 @@ function Calendar() {
         </button>
      </div>
 
-       <div style={{margin:"35px", width:"1000" }}>
+       <div style={{margin:"35px", width:"1100" }}>
             <FullCalendar
               height="auto"
-                ref={calendarRef}
-                key={forceRenderKey}
-                plugins={[dayGridPlugin, weekGridPlugin, timeGridPlugin]}
+
+                plugins={[dayGridPlugin, timeGridPlugin]}
                 headerToolbar={{
                     left: 'prev,next today',
                     center: 'title',
@@ -192,8 +192,10 @@ function Calendar() {
                 initialView="timeGridWeek"
                 events={events}
                 firstDay={1}
-                scrollTime={'06:00:00'}
+                scrollTime="06:00:00"
                 locale="fi"
+                ref={calendarRef}
+ //               key={forceRenderKey}
             />
 
 
