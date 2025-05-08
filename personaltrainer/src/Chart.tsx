@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import { BarChart, Bar, YAxis, XAxis } from 'recharts';
 
-// Register all Community features
+
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const BASE_URL = 'https://customer-rest-service-frontend-personaltrainer.2.rahtiapp.fi/api';
@@ -80,7 +80,7 @@ function Chart() {
                         activityAndDurations.get(training.activity)! + duration
                     );
                 } else {
-                    // Create a new entry for the activity
+                   
                     activityAndDurations.set(training.activity, duration);
                 }
             }
@@ -91,7 +91,7 @@ function Chart() {
             totalDuration: duration,
         })));
 
-        // Convert the Map to an array of objects
+    
         const tulos = Array.from(activityAndDurations.entries()).map(([activity, duration]) => ({
             name: activity,
             duration: duration,
