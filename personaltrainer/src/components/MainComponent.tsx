@@ -43,9 +43,11 @@ export default function MainComponent() {
         </div>
 
        {/***** Tab 3 - Kalenteri *****/}
-        <div className={"container " + (activeTab === 3 ? "" : "display-none")}>
-          <Calendar />
-        </div>
+        {activeTab === 3 && (
+          <div className="container">
+            <Calendar />
+          </div>
+        )}
 
            {/***** Tab 4- chart *****/}
            <div className={"container " + (activeTab === 4 ? "" : "display-none")}>

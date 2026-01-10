@@ -53,8 +53,7 @@ type TTrainingsCustomerCustom = TTrainingsCustomer & {
 function Calendar() {
     const [trainingsWithLinks, setTrainingsWithLinks] = useState<TTrainingsCustomerCustom[]>([]);
     const [events, setEvents] = useState<any>([]);
-    const [forceRenderKey, setForceRenderKey] = useState(0); // Tila uudelleenrenderöinnin pakottamiseen
-
+    
     // haetaan treenajä ja asiakkkaita koskeva data ja yhdistetään ne
     const fetchCombinedTrainings = async () => {
         try {
@@ -111,14 +110,15 @@ function Calendar() {
 
     useEffect(() => {
         fetchCombinedTrainings();
-        setEvents(calendarEvents);
-        setForceRenderKey((prevKey) => prevKey + 1);
     }, []); // Lataa tiedot aina, kun sijainti muuttuu.
+
+    useEffect(() => {
+        setEvents(calendarEvents);
+    }, [trainingsWithLinks]);
 
     const handleReload = () => {
         fetchCombinedTrainings(); // Lataa sivu uudelleen
-        setEvents(calendarEvents);
-        setForceRenderKey((prevKey) => prevKey + 1);
+        setEvents(calendarEvents);;
     };
 
     return (
@@ -132,7 +132,6 @@ function Calendar() {
        <div style={{margin:"35px"}}>
 
             <FullCalendar
-                key={forceRenderKey}
                 plugins={[dayGridPlugin, weekGridPlugin, timeGridPlugin]}
                 headerToolbar={{
                     left: 'prev,next today',
@@ -143,11 +142,9 @@ function Calendar() {
                 events={events}
                 firstDay={1}
                 slotMinTime="06:00:00"
-                scrollTime="07:00:00"
+                scrollTime="09:00:00"
                 locale="fi"
             />
-
-
          </div>
         </>
 
